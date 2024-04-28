@@ -1,8 +1,6 @@
 import pygame
 from CheckerGame import CheckerBoard
-
-WIDTH = 800
-HEIGHT = 800
+from constants import HEIGHT, WIDTH
 
 if __name__ == "__main__":
     window = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -13,12 +11,15 @@ if __name__ == "__main__":
     print(CB)
 
     while gameActive:
-        CB.drawBaord(window)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 gameActive = False
-            break
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pass
+
+        CB.drawBaord(window)
+        pygame.display.update()
 
     pygame.quit()
 
