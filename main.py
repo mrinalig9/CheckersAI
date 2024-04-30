@@ -8,6 +8,7 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
 
     CB = CheckerBoard()
+    CB.initializeBoard()
     print(CB)
 
     while gameActive:
@@ -18,7 +19,12 @@ if __name__ == "__main__":
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pass
 
+        # Monitoring Performance
+        # clock.tick()
+        # print(clock.get_fps())
+
         CB.drawBaord(window)
+        CB.drawPieces(window)
         pygame.display.update()
 
     pygame.quit()

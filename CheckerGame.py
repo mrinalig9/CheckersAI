@@ -1,12 +1,13 @@
+from collections.abc import Iterable
 import pygame
 from constants import _P1PIECE, _P2PIECE, _P1KING, _P2KING, _BOARD_COLOR, _PIECE_COLOR, _SQUARE_SIZE
+from constants import _PIECE_RADIUS, _ROWS, _COLS,_PIECE_PADDING
 
 # Each piece in the checkers board
 class Piece:    
     def __init__(self, row, col, pieceNum):
         self.x = 0
         self.y = 0
-        self.radius = (_SQUARE_SIZE // 2)
 
         self.king = False
         if (pieceNum == _P1KING or pieceNum == _P2KING):
@@ -18,15 +19,17 @@ class Piece:
         self.pieceNum = pieceNum
 
         # calculates x and y position from row and column
-        self.calculatePositon()
+        self.calculatePosition()
 
     def calculatePosition(self):
-        self.x = self.col * _SQUARE_SIZE + _SQUARE_SIZE // 2
-        self.y = self.row * _SQUARE_SIZE + _SQUARE_SIZE // 2
+        self.x = (self.col * _SQUARE_SIZE) + (_SQUARE_SIZE // 2)
+        self.y = (self.row * _SQUARE_SIZE) + (_SQUARE_SIZE // 2)
         
     def draw(self, window):
-        pygame.draw.circle(window, _PIECE_COLOR[self.pieceNum], (self.x, self.y), self.radius)
+        pygame.draw.circle(window, _PIECE_COLOR[self.pieceNum], (self.x, self.y), _PIECE_RADIUS - _PIECE_PADDING)
 
+    def __str__(self) -> str:
+        return str(self.pieceNum)
 
 
 # Game board class
@@ -36,25 +39,31 @@ class CheckerBoard:
         
         # 2D Board Matrix
         # 0 = empty square
-        # 1 = Player 1's piece
-        # 2 = Player 2's piece
-        # 3 = Player 1's king
-        # 4 = Player 2's king
-        self.board = [
-            [0, _P1PIECE, 0, _P1PIECE, 0, _P1PIECE, 0, _P1PIECE],
-            [_P1PIECE, 0, _P1PIECE, 0, _P1PIECE, 0, _P1PIECE, 0],
-            [0, _P1PIECE, 0, _P1PIECE, 0, _P1PIECE, 0, _P1PIECE],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [_P2PIECE, 0, _P2PIECE, 0, _P2PIECE, 0, _P2PIECE, 0],
-            [0, _P2PIECE, 0, _P2PIECE, 0, _P2PIECE, 0, _P2PIECE],
-            [_P2PIECE, 0, _P2PIECE, 0, _P2PIECE, 0, _P2PIECE, 0]
-            ]
+        # -1 = Player 1's piece
+        # 1  = Player 2's piece
+        # -2 = Player 1's king
+        # 2  = Player 2's king
+        self.board = []
         # indicated player's turn
-        self.turn = _P1PIECE
+        self.turn = _P2PIECE
 
         self.player1NumPieces = self.player2NumPieces = 12
         self.player1NumKings = self.player2NumKings = 0
+
+    # Sets up pieces for a new game
+    def initializeBoard(self):
+        for i in range(_ROWS):
+            self.board.append([])
+            for j in range(_COLS):
+                if (((i+j) % 2) == 0):
+                    if (i < 3):
+                        self.board[i].append(Piece(i, j, _P1PIECE))
+                    elif (i > 4):
+                        self.board[i].append(Piece(i, j, _P2PIECE))
+                    else:
+                        self.board[i].append(0)
+                else:
+                    self.board[i].append(0)
 
     # draws the board with pieces onto the window using pygame
     def drawBaord(self, window) -> None:
@@ -78,9 +87,11 @@ class CheckerBoard:
                 pygame.draw.rect(window, color, (x,y, _SQUARE_SIZE, _SQUARE_SIZE))
     
 
-    def drawPiece(self, window, pieces:list[Piece]) -> None:
-        for piece in piece:
-            piece.draw(window)
+    def drawPieces(self, window) -> None:
+        for row in self.board:
+            for piece in row:
+                if (type(piece) is Piece):
+                    piece.draw(window)
 
     # for printing out the board on the console
     def __str__(self):
