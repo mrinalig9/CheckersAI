@@ -9,13 +9,13 @@ class CheckerAI:
     # Utility function
     # Takes a board state evaluates it
     # Higher evaluation for kings
-    def evaluateBoard(self, board:CheckerBoard, player) -> int:
+    def evaluateBoard(self, board:CheckerBoard) -> int:
         # AI Teams works on this
         # pass
-        if player == 1: 
-            return self.player1NumPieces - self.player2NumPieces + self.player1NumKings - self.player2NumKings
+        if board.turn == 1: 
+            return board.player1NumPieces - board.player2NumPieces + board.player1NumKings - board.player2NumKings
         else: 
-            return self.player2NumPieces - self.player1NumPieces + self.player2NumKings - self.player1NumKings
+            return board.player2NumPieces - board.player1NumPieces + board.player2NumKings - board.player1NumKings
    
     
     # current_state (board) - current state of the game board
@@ -25,24 +25,23 @@ class CheckerAI:
     def minimax(self, current_state, depth, is_max): 
         # no move will be made
         if depth == 0:
-            return current_state
+            return self.evaluateBoard(current_state), current_state
         
         max_val = float('-inf')
         min_val = float('inf')
         next_move = None
+        # posssible_moves = BoardTransition.getChildren(current_state)
         possible_moves = []
         if is_max: 
-            # possible_moves = get_children(current_state, color)
             for move in possible_moves: 
-                value, path = minimax(self, move, depth - 1, False)
+                value, path = self.minimax(self, move, depth - 1, False)
                 if value > max_val: 
                     max_val = value
                     next_move = move
             return max_val, next_move
         else: 
-            # possible_moves = get_children(current_state, color)
             for move in possible_moves: 
-                value, path = minimax(self, move, depth - 1, True)
+                value, path = self.minimax(self, move, depth - 1, True)
                 if value < min_val: 
                     min_val = value
                     next_move = move
