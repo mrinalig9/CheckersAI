@@ -55,7 +55,7 @@ class CheckerBoard:
         for i in range(_ROWS):
             self.board.append([])
             for j in range(_COLS):
-                if (((i+j) % 2) == 0):
+                if (((i+j) % 2) != 0):
                     if (i < 3):
                         self.board[i].append(Piece(i, j, _P1PIECE))
                     elif (i > 4):
@@ -93,6 +93,21 @@ class CheckerBoard:
                 if (type(piece) is Piece):
                     piece.draw(window)
 
+    def selectPiece(self) -> Piece:
+        # get mouse position
+        mousePosX, mousePosY = pygame.mouse.get_pos()
+        print(f"Mouse position x: ${mousePosX}, y: ${mousePosY}")
+        # calculate board square location clicked on
+        pieceRow = mousePosY // _SQUARE_SIZE
+        pieceCol = mousePosX // _SQUARE_SIZE
+        print(f"Row: ${pieceRow} Col: ${pieceCol}")
+        
+        selectedSquare = self.board[pieceRow][pieceCol]
+        if (type(selectedSquare) is Piece and (selectedSquare.pieceNum * self.turn) > 0):
+            print("selected player piece")
+            return selectedSquare
+        return None
+    
     # for printing out the board on the console
     def __str__(self):
         return "\n".join(" ".join(map(str, row)) for row in self.board)
