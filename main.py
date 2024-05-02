@@ -23,7 +23,7 @@ if __name__ == "__main__":
         # clock.tick()
         # print(clock.get_fps())
 
-        CB.drawBaord(window)
+        CB.drawBoard(window)
         CB.drawPieces(window)
         pygame.display.update()
 
