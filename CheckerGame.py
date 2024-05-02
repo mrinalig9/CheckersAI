@@ -66,7 +66,7 @@ class CheckerBoard:
                     self.board[i].append(0)
 
     # draws the board with pieces onto the window using pygame
-    def drawBaord(self, window) -> None:
+    def drawBoard(self, window) -> None:
         # GUI team works on this
 
         #background color
