@@ -1,6 +1,6 @@
 from Transition import BoardTransition
 from CheckerGame import CheckerBoard
-import tensorflow as tf
+#import tensorflow as tf
 
 class CheckerAI:
     def __init__(self) -> None:

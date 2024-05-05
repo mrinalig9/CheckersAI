@@ -31,6 +31,9 @@ class Piece:
     def __str__(self) -> str:
         return str(self.pieceNum)
 
+    def __eq__(self, other) -> bool:
+        return self.pieceNum == other.pieceNum and self.row == other.row and self.col == other.col
+
 
 # Game board class
 class CheckerBoard:
@@ -111,5 +114,9 @@ class CheckerBoard:
     # for printing out the board on the console
     def __str__(self):
         return "\n".join(" ".join(map(str, row)) for row in self.board)
-
-
+    
+    def __hash__(self):
+        return hash(str(self))
+    
+    def __eq__(self, other) -> bool:
+        return self.board == other.board
