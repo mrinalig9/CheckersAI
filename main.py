@@ -14,16 +14,10 @@ if __name__ == "__main__":
     print(CB)
     CB2 = CheckerBoard()
     CB2.initializeBoard()
-    
-    boardDict = dict()
-    boardDict[CB] = ai.evaluateBoard(CB)
 
-    print(boardDict)
-    print(CB.__hash__())
-    print(CB2.__hash__())
-
-    if (CB2 in boardDict):
+    if (CB2 in ai.qTable):
         print("Checker board 1 is equal to Checkers board 2")
+        print(ai.qTable)
     else:
         print("Checker boards are not equal")
 

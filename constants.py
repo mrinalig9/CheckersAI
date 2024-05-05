@@ -14,3 +14,5 @@ _PIECE_COLOR = dict([(-1, (220, 220, 220)), (1, (220, 0, 50)), (-2, (255, 100, 2
 _SQUARE_SIZE = WIDTH // _COLS
 _PIECE_RADIUS = _SQUARE_SIZE // 2
 _PIECE_PADDING = 10
+
+Q_TABLE_FILE = "QTable.npy"
