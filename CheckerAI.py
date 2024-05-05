@@ -1,11 +1,17 @@
 from Transition import BoardTransition
 from CheckerGame import CheckerBoard
-import tensorflow as tf
+import numpy as np
+from constants import Q_TABLE_FILE
+#import tensorflow as tf
 
 class CheckerAI:
     def __init__(self) -> None:
-        # This will be implemented later on to import node weights for utility funciton
-        pass
+        try:
+            self.qTable = np.load(Q_TABLE_FILE, allow_pickle="TRUE").item()
+        except:
+            print("No Q Table exists")
+            self.qTable = dict()
+            np.save(Q_TABLE_FILE, self.qTable)
 
     # Utility function
     # Takes a board state evaluates it
@@ -63,3 +69,7 @@ class CheckerAI:
             path.append(current_node)
             current_node = current_node.parent
         return path[::-1]
+    
+    # Saves q table inside binary file
+    def __del__(self):
+        np.save(Q_TABLE_FILE, self.qTable)

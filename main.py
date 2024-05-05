@@ -1,5 +1,6 @@
 import pygame
 from CheckerGame import CheckerBoard, Piece
+from CheckerAI import CheckerAI
 from constants import HEIGHT, WIDTH
 
 if __name__ == "__main__":
@@ -7,9 +8,18 @@ if __name__ == "__main__":
     gameActive = True
     clock = pygame.time.Clock()
 
+    ai = CheckerAI()
     CB = CheckerBoard()
     CB.initializeBoard()
     print(CB)
+    CB2 = CheckerBoard()
+    CB2.initializeBoard()
+
+    if (CB2 in ai.qTable):
+        print("Checker board 1 is equal to Checkers board 2")
+        print(ai.qTable)
+    else:
+        print("Checker boards are not equal")
 
     # Treat as pointer to a piece
     selectedPiece:Piece = None
