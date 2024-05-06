@@ -33,7 +33,7 @@ class BoardTransition:
                         newBoard.changeTurn()
                         allBoards.append(newBoard)
 
-                    newCaptureMoves = self.getBoardAfterCaptureMoves(board, piece)
+                    newCaptureMoves = board.getBoardAfterCaptureMoves(piece)
                     if (len(newCaptureMoves) != 0):
                         captureBoards.extend(newCaptureMoves)
         
@@ -158,48 +158,3 @@ class BoardTransition:
             allBoards.append(board)
         return allBoards
 
-    def getBoardAfterCaptureMoves(self, board:CheckerBoard, piece:Piece) -> list[CheckerBoard]:
-        
-        movesToCheck = []
-        if (piece.king):
-            # if king check all 4 diagnol positions
-            movesToCheck.append((piece.row + 1, piece.col + 1))
-            movesToCheck.append((piece.row + 1, piece.col - 1))
-            movesToCheck.append((piece.row - 1, piece.col + 1))
-            movesToCheck.append((piece.row - 1, piece.col - 1))
-        else:
-            # if piece check the position your moving towards
-            movesToCheck.append((piece.row - board.turn, piece.col + 1))
-            movesToCheck.append((piece.row - board.turn, piece.col - 1))
-
-        possibleBoards = []
-        for move in movesToCheck:
-            row = move[0]
-            col = move[1]
-            if 0 <= row < _ROWS and 0 <= col < _COLS:
-                # if valid position
-                if (type(board.board[row][col]) is Piece and (board.board[row][col].pieceNum * board.turn) < 0):
-                    # if there is an opponents piece in that position
-                    newRow = 2*row - piece.row
-                    newCol = 2*col - piece.col
-                    if 0 <= newRow < _ROWS and 0 <= newCol < _COLS:
-                        # checks if the new and col is within bounds
-                        if (type(board.board[newRow][newCol]) is not Piece):
-                            # if the position across is empty square
-                            newBoard = deepcopy(board)
-                            # newBoard.board[piece.row][piece.col], newBoard.board[newRow][newCol] = newBoard.board[newRow][newCol], newBoard.board[piece.row][piece.col]
-                            newPiece = newBoard.movePieceToEmptySquare(piece.row, piece.col, newRow, newCol)
-                            # removes the captured piece from board
-                            newBoard.board[row][col] = 0
-                            # recursive calls for multi captures
-                            multiCapture = self.getBoardAfterCaptureMoves(newBoard, newPiece)
-                            if (len(multiCapture) == 0):
-                                newBoard.changeTurn()
-                                possibleBoards.append(newBoard)
-                            else:
-                                possibleBoards.append(multiCapture)
-        
-        return possibleBoards
-        
-
-        

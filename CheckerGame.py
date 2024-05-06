@@ -1,7 +1,7 @@
-from collections.abc import Iterable
 import pygame
+from copy import deepcopy
 from constants import _P1PIECE, _P2PIECE, _P1KING, _P2KING, _BOARD_COLOR, _PIECE_COLOR, _SQUARE_SIZE
-from constants import _PIECE_RADIUS, _ROWS, _COLS,_PIECE_PADDING
+from constants import _PIECE_RADIUS, _ROWS, _COLS,_PIECE_PADDING, _FORCED_CAPTURE
 
 # Each piece in the checkers board
 class Piece:    
@@ -28,6 +28,10 @@ class Piece:
     def draw(self, window):
         pygame.draw.circle(window, _PIECE_COLOR[self.pieceNum], (self.x, self.y), _PIECE_RADIUS - _PIECE_PADDING)
 
+    def drawOutline(self, window):
+        pygame.draw.circle(window, ((50, 50, 220)), (self.x, self.y), _PIECE_RADIUS - _PIECE_PADDING + 5)
+
+
     def __str__(self) -> str:
         return str(self.pieceNum)
 
@@ -37,7 +41,6 @@ class Piece:
 
 # Game board class
 class CheckerBoard:
-    
     def __init__(self):
         
         # 2D Board Matrix
@@ -123,34 +126,51 @@ class CheckerBoard:
         return None
 
     
-    def placePiece(self, piece) -> None:
-        #get mouse position
+    def placePiece(self, piece) -> bool:
+        # get mouse position
         mousePosX, mousePosY = pygame.mouse.get_pos()
-        print(f"Mouse position x: ${mousePosX}, y: ${mousePosY}")
         # calculate board square location clicked on
         pieceRow = mousePosY // _SQUARE_SIZE
         pieceCol = mousePosX // _SQUARE_SIZE
-        print(f"Row: ${pieceRow} Col: ${pieceCol}")
-        
-        #make sure its a valid move
 
-         #ensure the checker piece moves diagonally
-        if abs(pieceRow - piece.row) == 1 and abs(pieceCol - piece.col) == 1:
-            print('valid move')
-            print(piece.row)
-            print(piece.col)
-            piece.row = pieceRow
-            piece.col = pieceCol
-            piece.calculatePosition()
-            self.board[pieceRow][pieceCol] ,self.board[piece.row][piece.col]= piece,self.board[pieceRow][pieceCol]
-            print(piece.row)
-            print(piece.col)
-        
-        #switch players turn
-            if self.turn == _P2PIECE:
-                self.turn = _P1PIECE
-            else:
-                self.turn = _P2PIECE
+        # ensure the checker piece moves to an empty square
+        if type(self.board[pieceRow][pieceCol]) is not Piece:
+
+            # Normal move
+            if (piece.row - pieceRow == self.turn and abs(pieceCol - piece.col) == 1) or (piece.king and abs(piece.row - pieceRow) == 1 and abs(pieceCol - piece.col) == 1):
+                if (_FORCED_CAPTURE):
+                    if (len(self.captureMoveExists()) == 0):
+                        self.movePieceToEmptySquare(piece.row, piece.col, pieceRow, pieceCol)
+                        # switch players turn
+                        self.changeTurn()
+                        return True
+                    else:
+                        return False
+                else:
+                    self.movePieceToEmptySquare(piece.row, piece.col, pieceRow, pieceCol)
+                    # switch players turn
+                    self.changeTurn()
+                    return True
+            # Capture move
+            elif (piece.row - pieceRow == self.turn * 2 and abs(pieceCol - piece.col) == 2) or (piece.king and abs(piece.row - pieceRow) == 2 and abs(pieceCol - piece.col) == 2):
+                captureRow = int((piece.row + pieceRow) / 2)
+                captureCol = int((piece.col + pieceCol) / 2)
+
+                capturePiece = self.board[captureRow][captureCol]
+
+                if type(capturePiece) is Piece and (capturePiece.pieceNum * self.turn) < 0:
+                    # if the captured piece is opponents piece remove piece and move
+                    self.movePieceToEmptySquare(piece.row, piece.col, pieceRow, pieceCol)
+                    self.board[captureRow][captureCol] = 0
+
+                    selectedPiece = self.board[pieceRow][pieceCol]
+                    possibleCaptures = self.getBoardAfterCaptureMoves(selectedPiece)
+                    # if no possible captures exist end turn
+                    if (len(possibleCaptures) == 0):
+                        self.changeTurn()
+                        return True
+        return False
+            
     
     # moves a piece to an empty square
     def movePieceToEmptySquare(self, positionX, positionY, otherX, otherY) -> Piece:
@@ -162,10 +182,102 @@ class CheckerBoard:
             if piece.row == 0 or piece.row == (_ROWS - 1):
                 piece.king = True
                 piece.pieceNum = piece.pieceNum * 2
+                if (piece.pieceNum < 0):
+                    self.player1NumKings += 1
+                    self.player1NumPieces -= 1
+                else:
+                    self.player2NumKings += 1
+                    self.player2NumPieces -= 1
+                
         return piece
+    
+    def getBoardAfterCaptureMoves(self, piece:Piece) -> list:
+        
+        movesToCheck = []
+        if (piece.king):
+            # if king check all 4 diagnol positions
+            movesToCheck.append((piece.row + 1, piece.col + 1))
+            movesToCheck.append((piece.row + 1, piece.col - 1))
+            movesToCheck.append((piece.row - 1, piece.col + 1))
+            movesToCheck.append((piece.row - 1, piece.col - 1))
+        else:
+            # if piece check the position your moving towards
+            movesToCheck.append((piece.row - self.turn, piece.col + 1))
+            movesToCheck.append((piece.row - self.turn, piece.col - 1))
+
+        possibleBoards = []
+        for move in movesToCheck:
+            row = move[0]
+            col = move[1]
+            if 0 <= row < _ROWS and 0 <= col < _COLS:
+                # if valid position
+                if (type(self.board[row][col]) is Piece and (self.board[row][col].pieceNum * self.turn) < 0):
+                    # if there is an opponents piece in that position
+                    newRow = 2*row - piece.row
+                    newCol = 2*col - piece.col
+                    if 0 <= newRow < _ROWS and 0 <= newCol < _COLS:
+                        # checks if the new and col is within bounds
+                        if (type(self.board[newRow][newCol]) is not Piece):
+                            # if the position across is empty square
+                            newBoard = deepcopy(self)
+                            # newBoard.board[piece.row][piece.col], newBoard.board[newRow][newCol] = newBoard.board[newRow][newCol], newBoard.board[piece.row][piece.col]
+                            newPiece = newBoard.movePieceToEmptySquare(piece.row, piece.col, newRow, newCol)
+                            # removes the captured piece from board
+                            pieceToRemove:Piece = newBoard.board[row][col]
+                            if (self.turn == _P1PIECE):
+                                if pieceToRemove.king:
+                                    newBoard.player1NumKings -= 1
+                                else:
+                                    newBoard.player1NumPieces -= 1
+                            else:
+                                if pieceToRemove.king:
+                                    newBoard.player2NumKings -= 1
+                                else:
+                                    newBoard.player2NumPieces -= 1
+                            newBoard.board[row][col] = 0
+
+                            # recursive calls for multi captures
+                            multiCapture = newBoard.getBoardAfterCaptureMoves(newPiece)
+                            if (len(multiCapture) == 0):
+                                newBoard.changeTurn()
+                                possibleBoards.append(newBoard)
+                            else:
+                                possibleBoards.append(multiCapture)
+        
+        return possibleBoards
+    
+    # returns if capture move exists on current board and for which piece its available
+    def captureMoveExists(self) -> list[Piece]:
+        capturingPieces = []
+        for _, row in enumerate(self.board):
+            for _, piece in enumerate(row):
+                if (type(piece) is Piece and (piece.pieceNum * self.turn) > 0):
+                    newCaptureMoves = self.getBoardAfterCaptureMoves(piece)
+                    if (len(newCaptureMoves) != 0):
+                        capturingPieces.append(piece)
+                    
+        return capturingPieces
 
     def changeTurn(self):
         self.turn = self.turn * -1
+
+    # 0 - game not over
+    # -1 - player 1 won
+    # 1 - player 2 won
+    def gameEnd(self, numBoardStates) -> int:
+        if (self.player1NumPieces == 0 and self.player1NumKings == 0):
+            return _P2PIECE
+        elif (self.player2NumPieces == 0 and self.player2NumKings == 0):
+            return _P1PIECE
+        
+        if (numBoardStates == 0):
+            if (self.player1NumPieces + self.player1NumKings) > (self.player2NumPieces + self.player2NumKings):
+                return _P1KING
+            else:
+                return _P2PIECE
+        
+        return 0
+
 
     # for printing out the board on the console
     def __str__(self):

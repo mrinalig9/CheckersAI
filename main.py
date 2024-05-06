@@ -1,61 +1,57 @@
 import pygame
 from CheckerGame import CheckerBoard, Piece
 from CheckerAI import CheckerAI
-from constants import HEIGHT, WIDTH
 from Transition import BoardTransition
+from constants import HEIGHT, WIDTH, _P1PIECE, _P2PIECE, _FORCED_CAPTURE
 
 if __name__ == "__main__":
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     gameActive = True
     clock = pygame.time.Clock()
+    player = _P2PIECE
 
     ai = CheckerAI()
-    CB = CheckerBoard()
-    # CB.initializeBoard()
-    boardLayout = [
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [-1, 0, 0, 0, 1, 0, 0, 0],
-        [0, -1, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, -1, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, -2, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0]
-    ]
-    CB.makeCustomBoard(boardLayout)
-
-    print(CB)
-
     bt = BoardTransition()
-    pieceToTest = CB.board[4][3]
-    newBoards = bt.getAllBoards(CB)
+    CB = CheckerBoard()
+    CB.initializeBoard()
+    # print(CB)
 
-    print(newBoards)
+    nextBoardStates = bt.getAllBoards(CB)
 
     # Treat as pointer to a piece
     selectedPiece:Piece = None
 
     while gameActive:
+        CB.drawBoard(window)
         time = pygame.time.get_ticks()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 gameActive = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                print(f"Previous selected piece: ${selectedPiece}")
-                selectedPiece = CB.selectPiece()
+                if (selectedPiece is None):
+                    selectedPiece = CB.selectPiece()
+                else:
+                    if (CB.placePiece(selectedPiece)):
+                        nextBoardStates = bt.getAllBoards(CB)
+                        wonPlayer = CB.gameEnd(len(nextBoardStates))
+                        if (wonPlayer == _P1PIECE):
+                            print("player 1 won!")
+                            gameActive = False
+                        elif (wonPlayer == _P2PIECE):
+                            print("player 2 won!")
+                            gameActive = False
 
+
+                    selectedPiece = None
+
+        if (selectedPiece is not None):
+            selectedPiece.drawOutline(window)
         # Monitoring Performance
         # clock.tick()
         # print(clock.get_fps())
 
-        if (time < 1000) or len(newBoards) == 0:
-            CB.drawBoard(window)
-            CB.drawPieces(window)
-        else:
-            index = int((time / 4000) % len(newBoards))
-            newBoards[index].drawBoard(window)
-            newBoards[index].drawPieces(window)
+        CB.drawPieces(window)
 
         pygame.display.update()
 

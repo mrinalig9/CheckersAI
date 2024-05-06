@@ -6,6 +6,7 @@ from constants import Q_TABLE_FILE
 
 class CheckerAI:
     def __init__(self) -> None:
+        self.boardTransition = BoardTransition()
         try:
             self.qTable = np.load(Q_TABLE_FILE, allow_pickle="TRUE").item()
         except:
@@ -33,8 +34,7 @@ class CheckerAI:
     # uses a get_children() function that should be made in transition
     def minimax(self, current_state, depth, is_max, alpha, beta): 
         # no move will be made
-        # possible_moves = BoardTransition.getChildren(current_state)
-        possible_moves = []
+        possible_moves = self.boardTransition.getAllBoards(possible_moves)
         if depth == 0 or len(possible_moves) == 0:
             return self.evaluateBoard(current_state), current_state
         
