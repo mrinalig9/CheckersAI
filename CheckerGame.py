@@ -68,6 +68,17 @@ class CheckerBoard:
                 else:
                     self.board[i].append(0)
 
+    # Makes a custom board from a board layout
+    def makeCustomBoard(self, boardLayout:list[list]):
+        for i in range(_ROWS):
+            self.board.append([])
+            for j in range(_COLS):
+                if (boardLayout[i][j] != 0):
+                    self.board[i].append(Piece(i, j, boardLayout[i][j]))
+                else:
+                    self.board[i].append(0)
+
+
     # draws the board with pieces onto the window using pygame
     def drawBoard(self, window) -> None:
         # GUI team works on this
@@ -111,9 +122,24 @@ class CheckerBoard:
             return selectedSquare
         return None
     
+    # moves a piece to an empty square
+    def movePieceToEmptySquare(self, positionX, positionY, otherX, otherY) -> Piece:
+        self.board[positionX][positionY], self.board[otherX][otherY] = self.board[otherX][otherY], self.board[positionX][positionY]
+        piece:Piece = self.board[otherX][otherY]
+        piece.row, piece.col = otherX, otherY
+        piece.calculatePosition()
+        if (not piece.king):
+            if piece.row == 0 or piece.row == (_ROWS - 1):
+                piece.king = True
+                piece.pieceNum = piece.pieceNum * 2
+        return piece
+
+    def changeTurn(self):
+        self.turn = self.turn * -1
+    
     # for printing out the board on the console
     def __str__(self):
-        return "\n".join(" ".join(map(str, row)) for row in self.board)
+        return "\n".join(" ".join(map(str, row)) for row in self.board) + "\n"
     
     def __hash__(self):
         return hash(str(self))

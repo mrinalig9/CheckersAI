@@ -1,6 +1,7 @@
-from CheckerGame import CheckerBoard
+from CheckerGame import CheckerBoard, Piece
 from copy import deepcopy
 from typing import List, Tuple
+from constants import _P1PIECE, _P2PIECE, _P1KING, _P2KING, _ROWS, _COLS, _FORCED_CAPTURE
 
 # Helps figure out valid moves
 class BoardTransition:
@@ -8,58 +9,76 @@ class BoardTransition:
         pass
 
     """This function returns every board possible in the game's current state (depending on the player)."""
-    def getAllBoards(self, board: CheckerBoard, player: int) -> List[CheckerBoard]:
+    def getAllBoards(self, board: CheckerBoard) -> List[CheckerBoard]:
         allBoards = []
+        captureBoards = []
 
-        for row in range(len(board.board)):
 
-            for column in range(len(board.board[row])):
+        for rowIndex, row in enumerate(board.board):
 
-                if board.board[row][column] == player or board.board[row][column] == player + 2: #if the current spot is the player's normal/king piece
+            for colIndex, piece in enumerate(row):
 
-                    allMoves = self.getAllMovesForPiece(board, (row, column)) #gets all moves for current piece
+                if (type(piece) is Piece and (piece.pieceNum * board.turn) > 0): #if the current spot is the player's normal/king piece
+
+                    allMoves = self.getAllMovesForPiece(board, piece) #gets all moves for current piece
 
                     for move in allMoves: # for every move possible, create a board from that move and add to allBoards
-                        newBoard = self.makeMove(deepcopy(board), (row, column), move)
+                        # newBoard = self.makeMove(deepcopy(board), (rowIndex, colIndex), move)
 
-                        newBoards = self.captureLogic(newBoard, player)
-                        allBoards.append(newBoards)
-        if not allBoards: 
-            allBoards.append(board)
+                        # newBoards = self.captureLogic(newBoard, board.turn)
+                        # allBoards.append(newBoards)
+
+                        newBoard = deepcopy(board)
+                        newBoard.movePieceToEmptySquare(rowIndex, colIndex, move[0], move[1])
+                        newBoard.changeTurn()
+                        allBoards.append(newBoard)
+
+                    newCaptureMoves = self.getBoardAfterCaptureMoves(board, piece)
+                    if (len(newCaptureMoves) != 0):
+                        captureBoards.extend(newCaptureMoves)
         
-        return allBoards
+        if (_FORCED_CAPTURE):
+            # if forced capture is on then only return capture moves
+            if (len(captureBoards) == 0):
+                return allBoards
+            else:
+                return captureBoards
+        else:
+            allBoards.extend(captureBoards)
+            return allBoards
+
+                
 
     """This function should get every move possible for the chosen piece. Includes normal moves, capture moves, and king moves."""
-    def getAllMovesForPiece(self, board: CheckerBoard, piecePosition: Tuple[int, int]) -> List[Tuple[int, int]]:
+    def getAllMovesForPiece(self, board: CheckerBoard, piece:Piece) -> List[Tuple[int, int]]:
         allMoves = []
-        row, column = piecePosition
-        piece = board.board[row][column]
 
-        if piece == 1 or piece == 3:  # Player 1's piece or king
+        if piece.pieceNum == _P1PIECE or piece.king:  # Player 1's piece or king
             
-            downDiagonals = [(row + 1, column + 1), (row + 1, column - 1)] # Top -> down diagonals
+            downDiagonals = [(piece.row + 1, piece.col + 1), (piece.row + 1, piece.col - 1)] # Top -> down diagonals
             
-            allMoves.extend(self.getValidMoves(board, piecePosition, downDiagonals)) # Add normal moves 
+            allMoves.extend(self.getValidMoves(board, downDiagonals)) # Add normal moves 
 
-        elif piece == 2 or piece == 4:  # Player 2's piece or king
+        if piece.pieceNum == _P2PIECE or piece.king:  # Player 2's piece or king
             
-            upDiagonals = [(row - 1, column + 1), (row - 1, column - 1)] # Bottom -> up diagonals
+            upDiagonals = [(piece.row - 1, piece.col + 1), (piece.row - 1, piece.col - 1)] # Bottom -> up diagonals
            
-            allMoves.extend(self.getValidMoves(board, piecePosition, upDiagonals))  # Add normal moves
+            allMoves.extend(self.getValidMoves(board, upDiagonals))  # Add normal moves
             
-        capturing_moves = self.getCapturingMoves(board, piecePosition) # Add capture moves
-        allMoves.extend(capturing_moves)
+        # capturing_moves = self.getCapturingMoves(board, piece) # Add capture moves
+        # allMoves.extend(capturing_moves)
 
         return allMoves
     
 
     """This function checks to see if the move given can be made on the board, i.e. not out of bounds of the board"""
-    def getValidMoves(self, board: CheckerBoard, piecePosition: Tuple[int, int], diagonals: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+    def getValidMoves(self, board: CheckerBoard, diagonals: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
         validMoves = []
         for newRow, newColumn in diagonals:
             
-            if 0 <= newRow < len(board.board) and 0 <= newColumn < len(board.board[0]): # Check if the new position is within the bounds of the board
-                 validMoves.append((newRow, newColumn)) # Add the move to validMoves
+            if 0 <= newRow < _ROWS and 0 <= newColumn < _COLS: # Check if the new position is within the bounds of the board
+                if (type(board.board[newRow][newColumn]) is not Piece): # if the new position is empty it is a valid move
+                    validMoves.append((newRow, newColumn)) # Add the move to validMoves
 
         return validMoves
 
@@ -89,10 +108,10 @@ class BoardTransition:
     """This function gets all the capture moves for this piece and follows the rule where if there is another capture available after the initial
     capture, then it will continue to capture. Returns a list of all capture moves available made by the piece.
     """
-    def getCaptureMoves(self, board: CheckerBoard, piecePosition: Tuple[int, int]) -> List[Tuple[int, int]]:
+    def getCaptureMoves(self, board: CheckerBoard, piece:Piece) -> List[Tuple[int, int]]:
         capturing_moves = []
-        row, column = piecePosition
-        player = board.board[row][column]
+        row, column = piece.row, piece.col
+        player = piece
         opponent = 1 if player == 2 else 2
         
         # Define the diagonals to check for capturing moves
@@ -139,5 +158,48 @@ class BoardTransition:
             allBoards.append(board)
         return allBoards
 
+    def getBoardAfterCaptureMoves(self, board:CheckerBoard, piece:Piece) -> list[CheckerBoard]:
+        
+        movesToCheck = []
+        if (piece.king):
+            # if king check all 4 diagnol positions
+            movesToCheck.append((piece.row + 1, piece.col + 1))
+            movesToCheck.append((piece.row + 1, piece.col - 1))
+            movesToCheck.append((piece.row - 1, piece.col + 1))
+            movesToCheck.append((piece.row - 1, piece.col - 1))
+        else:
+            # if piece check the position your moving towards
+            movesToCheck.append((piece.row - board.turn, piece.col + 1))
+            movesToCheck.append((piece.row - board.turn, piece.col - 1))
+
+        possibleBoards = []
+        for move in movesToCheck:
+            row = move[0]
+            col = move[1]
+            if 0 <= row < _ROWS and 0 <= col < _COLS:
+                # if valid position
+                if (type(board.board[row][col]) is Piece and (board.board[row][col].pieceNum * board.turn) < 0):
+                    # if there is an opponents piece in that position
+                    newRow = 2*row - piece.row
+                    newCol = 2*col - piece.col
+                    if 0 <= newRow < _ROWS and 0 <= newCol < _COLS:
+                        # checks if the new and col is within bounds
+                        if (type(board.board[newRow][newCol]) is not Piece):
+                            # if the position across is empty square
+                            newBoard = deepcopy(board)
+                            # newBoard.board[piece.row][piece.col], newBoard.board[newRow][newCol] = newBoard.board[newRow][newCol], newBoard.board[piece.row][piece.col]
+                            newPiece = newBoard.movePieceToEmptySquare(piece.row, piece.col, newRow, newCol)
+                            # removes the captured piece from board
+                            newBoard.board[row][col] = 0
+                            # recursive calls for multi captures
+                            multiCapture = self.getBoardAfterCaptureMoves(newBoard, newPiece)
+                            if (len(multiCapture) == 0):
+                                newBoard.changeTurn()
+                                possibleBoards.append(newBoard)
+                            else:
+                                possibleBoards.append(multiCapture)
+        
+        return possibleBoards
+        
 
         
