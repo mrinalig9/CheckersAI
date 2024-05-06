@@ -110,17 +110,47 @@ class CheckerBoard:
     def selectPiece(self) -> Piece:
         # get mouse position
         mousePosX, mousePosY = pygame.mouse.get_pos()
+        #print(f"Mouse position x: ${mousePosX}, y: ${mousePosY}")
+        # calculate board square location clicked on
+        pieceRow = mousePosY // _SQUARE_SIZE
+        pieceCol = mousePosX // _SQUARE_SIZE
+        #print(f"Row: ${pieceRow} Col: ${pieceCol}")
+        
+        selectedSquare = self.board[pieceRow][pieceCol]
+        if (type(selectedSquare) is Piece and (selectedSquare.pieceNum * self.turn) > 0):
+            #print("selected player piece")
+            return selectedSquare
+        return None
+
+    
+    def placePiece(self, piece) -> None:
+        #get mouse position
+        mousePosX, mousePosY = pygame.mouse.get_pos()
         print(f"Mouse position x: ${mousePosX}, y: ${mousePosY}")
         # calculate board square location clicked on
         pieceRow = mousePosY // _SQUARE_SIZE
         pieceCol = mousePosX // _SQUARE_SIZE
         print(f"Row: ${pieceRow} Col: ${pieceCol}")
         
-        selectedSquare = self.board[pieceRow][pieceCol]
-        if (type(selectedSquare) is Piece and (selectedSquare.pieceNum * self.turn) > 0):
-            print("selected player piece")
-            return selectedSquare
-        return None
+        #make sure its a valid move
+
+         #ensure the checker piece moves diagonally
+        if abs(pieceRow - piece.row) == 1 and abs(pieceCol - piece.col) == 1:
+            print('valid move')
+            print(piece.row)
+            print(piece.col)
+            piece.row = pieceRow
+            piece.col = pieceCol
+            piece.calculatePosition()
+            self.board[pieceRow][pieceCol] ,self.board[piece.row][piece.col]= piece,self.board[pieceRow][pieceCol]
+            print(piece.row)
+            print(piece.col)
+        
+        #switch players turn
+            if self.turn == _P2PIECE:
+                self.turn = _P1PIECE
+            else:
+                self.turn = _P2PIECE
     
     # moves a piece to an empty square
     def movePieceToEmptySquare(self, positionX, positionY, otherX, otherY) -> Piece:
@@ -136,7 +166,7 @@ class CheckerBoard:
 
     def changeTurn(self):
         self.turn = self.turn * -1
-    
+
     # for printing out the board on the console
     def __str__(self):
         return "\n".join(" ".join(map(str, row)) for row in self.board) + "\n"
