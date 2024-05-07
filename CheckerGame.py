@@ -56,6 +56,8 @@ class CheckerBoard:
         self.player1NumPieces = self.player2NumPieces = 12
         self.player1NumKings = self.player2NumKings = 0
 
+        self.parent = None
+
     # Sets up pieces for a new game
     def initializeBoard(self):
         for i in range(_ROWS):
@@ -161,14 +163,14 @@ class CheckerBoard:
                 if type(capturePiece) is Piece and (capturePiece.pieceNum * self.turn) < 0:
                     # if the captured piece is opponents piece remove piece and move
                     self.movePieceToEmptySquare(piece.row, piece.col, pieceRow, pieceCol)
-                    self.board[captureRow][captureCol] = 0
+                    self.removePieceFromBoard(capturePiece)
 
                     selectedPiece = self.board[pieceRow][pieceCol]
                     possibleCaptures = self.getBoardAfterCaptureMoves(selectedPiece)
                     # if no possible captures exist end turn
                     if (len(possibleCaptures) == 0):
                         self.changeTurn()
-                        return True
+                    return True
         return False
             
     
@@ -224,17 +226,7 @@ class CheckerBoard:
                             newPiece = newBoard.movePieceToEmptySquare(piece.row, piece.col, newRow, newCol)
                             # removes the captured piece from board
                             pieceToRemove:Piece = newBoard.board[row][col]
-                            if (self.turn == _P1PIECE):
-                                if pieceToRemove.king:
-                                    newBoard.player1NumKings -= 1
-                                else:
-                                    newBoard.player1NumPieces -= 1
-                            else:
-                                if pieceToRemove.king:
-                                    newBoard.player2NumKings -= 1
-                                else:
-                                    newBoard.player2NumPieces -= 1
-                            newBoard.board[row][col] = 0
+                            newBoard.removePieceFromBoard(pieceToRemove)
 
                             # recursive calls for multi captures
                             multiCapture = newBoard.getBoardAfterCaptureMoves(newPiece)
@@ -242,7 +234,7 @@ class CheckerBoard:
                                 newBoard.changeTurn()
                                 possibleBoards.append(newBoard)
                             else:
-                                possibleBoards.append(multiCapture)
+                                possibleBoards.extend(multiCapture)
         
         return possibleBoards
     
@@ -257,22 +249,48 @@ class CheckerBoard:
                         capturingPieces.append(piece)
                     
         return capturingPieces
+    
+    def removePieceFromBoard(self, piece:Piece):
+        if (self.turn == _P1PIECE):
+            if piece.king:
+                self.player1NumKings -= 1
+            else:
+                self.player1NumPieces -= 1
+        else:
+            if piece.king:
+                self.player2NumKings -= 1
+            else:
+                self.player2NumPieces -= 1
+
+        self.board[piece.row][piece.col] = 0
+        
 
     def changeTurn(self):
         self.turn = self.turn * -1
+
+    # calculates the correct pieces for the board
+    def recalculatePieces(self):
+        self.player1NumKings = self.player1NumPieces = self.player2NumKings = self.player2NumPieces = 0
+        for _, row in enumerate(self.board):
+            for _, piece in enumerate(row):
+                if (type(piece) is Piece):
+                    if (piece.pieceNum == _P1PIECE):
+                        self.player1NumPieces += 1
+                    elif (piece.pieceNum == _P2PIECE):
+                        self.player2NumPieces += 1
+                    elif (piece.pieceNum == _P1KING):
+                        self.player1NumKings += 1
+                    elif (piece.pieceNum == _P2KING):
+                        self.player2NumKings += 1
 
     # 0 - game not over
     # -1 - player 1 won
     # 1 - player 2 won
     def gameEnd(self, numBoardStates) -> int:
-        if (self.player1NumPieces == 0 and self.player1NumKings == 0):
-            return _P2PIECE
-        elif (self.player2NumPieces == 0 and self.player2NumKings == 0):
-            return _P1PIECE
-        
         if (numBoardStates == 0):
+            self.recalculatePieces()
             if (self.player1NumPieces + self.player1NumKings) > (self.player2NumPieces + self.player2NumKings):
-                return _P1KING
+                return _P1PIECE
             else:
                 return _P2PIECE
         
@@ -288,3 +306,12 @@ class CheckerBoard:
     
     def __eq__(self, other) -> bool:
         return self.board == other.board
+    
+    def __lt__(self, other):
+        other.parent = self
+        self.board, other.board = other.board, self.board
+        self.player1NumPieces, other.player1NumPieces = other.player1NumPieces, self.player1NumPieces
+        self.player2NumPieces, other.player2NumPieces = other.player2NumPieces, self.player2NumPieces
+        self.player1NumKings, other.player1NumKings = other.player1NumKings, self.player1NumKings
+        self.player2NumKings, other.player2NumKings = other.player2NumKings, self.player2NumKings
+        

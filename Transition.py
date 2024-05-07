@@ -36,6 +36,9 @@ class BoardTransition:
                     newCaptureMoves = board.getBoardAfterCaptureMoves(piece)
                     if (len(newCaptureMoves) != 0):
                         captureBoards.extend(newCaptureMoves)
+
+        for captureMoves in captureBoards:
+            captureMoves.changeTurn()
         
         if (_FORCED_CAPTURE):
             # if forced capture is on then only return capture moves

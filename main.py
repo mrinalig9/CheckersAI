@@ -1,4 +1,5 @@
 import pygame
+from threading import Thread
 from CheckerGame import CheckerBoard, Piece
 from CheckerAI import CheckerAI
 from Transition import BoardTransition
@@ -25,28 +26,36 @@ if __name__ == "__main__":
         CB.drawBoard(window)
         time = pygame.time.get_ticks()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                gameActive = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if (selectedPiece is None):
-                    selectedPiece = CB.selectPiece()
-                else:
-                    if (CB.placePiece(selectedPiece)):
-                        nextBoardStates = bt.getAllBoards(CB)
-                        wonPlayer = CB.gameEnd(len(nextBoardStates))
-                        if (wonPlayer == _P1PIECE):
-                            print("player 1 won!")
-                            gameActive = False
-                        elif (wonPlayer == _P2PIECE):
-                            print("player 2 won!")
-                            gameActive = False
+        # if its players turn
+        if (CB.turn == player):
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    gameActive = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if (selectedPiece is None):
+                        selectedPiece = CB.selectPiece()
+                    else:
+                        if (CB.placePiece(selectedPiece)):
+                            nextBoardStates = bt.getAllBoards(CB)
+                            wonPlayer = CB.gameEnd(len(nextBoardStates))
+                            if (wonPlayer == _P1PIECE):
+                                print("player 1 won!")
+                                gameActive = False
+                            elif (wonPlayer == _P2PIECE):
+                                print("player 2 won!")
+                                gameActive = False
+                        selectedPiece = None
 
+            if (selectedPiece is not None):
+                selectedPiece.drawOutline(window)
+        # if its AI's turn
+        else:
+            nextBestMove = ai.nextBestMove(CB)
+            CB < nextBestMove
+            CB.changeTurn()
+            print(ai.evaluateBoard(CB))
 
-                    selectedPiece = None
-
-        if (selectedPiece is not None):
-            selectedPiece.drawOutline(window)
+            nextBoardStates = bt.getAllBoards(CB)
         # Monitoring Performance
         # clock.tick()
         # print(clock.get_fps())
