@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 selectedPiece.drawOutline(window)
         # if its AI's turn
         else:
-            depth = int(45/(CB.player1NumPieces + 3))
+            depth = int(180/(CB.player1NumPieces + CB.player2NumPieces + 36))
             nextBestMove = ai.nextBestMove(CB, depth)
             print("depth: ", depth)
             CB < nextBestMove
