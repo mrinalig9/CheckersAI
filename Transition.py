@@ -38,6 +38,7 @@ class BoardTransition:
                         captureBoards.extend(newCaptureMoves)
 
         for captureMoves in captureBoards:
+            captureMoves.recalculatePieces() # temporary fix ~~~~
             captureMoves.changeTurn()
         
         if (_FORCED_CAPTURE):

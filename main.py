@@ -50,12 +50,21 @@ if __name__ == "__main__":
                 selectedPiece.drawOutline(window)
         # if its AI's turn
         else:
-            nextBestMove = ai.nextBestMove(CB)
+            depth = int(45/(CB.player1NumPieces + 3))
+            nextBestMove = ai.nextBestMove(CB, depth)
+            print("depth: ", depth)
             CB < nextBestMove
             CB.changeTurn()
-            print(ai.evaluateBoard(CB))
+            print("eval: ", ai.evaluateBoard(CB))
 
             nextBoardStates = bt.getAllBoards(CB)
+            wonPlayer = CB.gameEnd(len(nextBoardStates))
+            if (wonPlayer == _P1PIECE):
+                print("player 1 won!")
+                gameActive = False
+            elif (wonPlayer == _P2PIECE):
+                print("player 2 won!")
+                gameActive = False
         # Monitoring Performance
         # clock.tick()
         # print(clock.get_fps())

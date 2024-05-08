@@ -103,7 +103,7 @@ class CheckerBoard:
                     color = _BOARD_COLOR[1]
         
                 #draw each square in the checkersboard
-                pygame.draw.rect(window, color, (x,y, _SQUARE_SIZE, _SQUARE_SIZE))
+                pygame.draw.rect(window, color, (x, y, _SQUARE_SIZE, _SQUARE_SIZE))
     
 
     def drawPieces(self, window) -> None:
@@ -134,6 +134,8 @@ class CheckerBoard:
         # calculate board square location clicked on
         pieceRow = mousePosY // _SQUARE_SIZE
         pieceCol = mousePosX // _SQUARE_SIZE
+        if (pieceRow < 0 or pieceRow > _ROWS or pieceCol < 0 or pieceCol > _COLS):
+            return False
 
         # ensure the checker piece moves to an empty square
         if type(self.board[pieceRow][pieceCol]) is not Piece:
@@ -164,6 +166,7 @@ class CheckerBoard:
                     # if the captured piece is opponents piece remove piece and move
                     self.movePieceToEmptySquare(piece.row, piece.col, pieceRow, pieceCol)
                     self.removePieceFromBoard(capturePiece)
+                    self.recalculatePieces() # need to remove in future
 
                     selectedPiece = self.board[pieceRow][pieceCol]
                     possibleCaptures = self.getBoardAfterCaptureMoves(selectedPiece)

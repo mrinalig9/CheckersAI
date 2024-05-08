@@ -23,10 +23,10 @@ class CheckerAI:
     def evaluateBoard(self, board:CheckerBoard) -> int:
         # AI Teams works on this
         # pass
-        if board.turn == 1: 
-            return board.player1NumPieces - board.player2NumPieces + ((board.player1NumKings - board.player2NumKings) * self._KING_VALUE)
-        else: 
-            return board.player2NumPieces - board.player1NumPieces + ((board.player2NumKings - board.player1NumKings) * self._KING_VALUE)
+        # if board.turn == 1: 
+        return board.player1NumPieces - board.player2NumPieces + ((board.player1NumKings - board.player2NumKings) * self._KING_VALUE)
+        # else: 
+        #     return board.player2NumPieces - board.player1NumPieces + ((board.player2NumKings - board.player1NumKings) * self._KING_VALUE)
    
     
     # current_state (board) - current state of the game board
@@ -75,11 +75,11 @@ class CheckerAI:
             print("No move exists")
             return None
         bestNextMove = None
-        bestMoveVal = math.inf
+        bestMoveVal = -math.inf
 
         for move in nextMoves:
-            moveEvaluation = -self.minimax(move, accuracyLevel, False, float('-inf'), float('inf'))
-            if (moveEvaluation < bestMoveVal):
+            moveEvaluation = self.minimax(move, accuracyLevel, True, float('-inf'), float('inf'))
+            if (moveEvaluation > bestMoveVal):
                 bestNextMove = move
                 bestMoveVal = moveEvaluation
 
