@@ -32,38 +32,38 @@ class CheckerAI:
     # current_state (board) - current state of the game board
     # depth (int) - how deep in the minimax tree to go
     # is_max (boolean) - True for max level, False for min level
-    # alpha (int) - current alpha value of tree
-    # beta (int) - current beta value of tree
+    # alpha (float) - current alpha value of tree
+    # beta (float) - current beta value of tree
     # uses a get_children() function that should be made in transition
-    def minimax(self, current_state, depth, is_max, alpha, beta): 
+    def minimax(self, current_state, depth, is_max, alpha : float, beta : float): 
         # no move will be made
         possible_moves = self.boardTransition.getAllBoards(current_state)
         if depth == 0 or len(possible_moves) == 0:
-            return self.evaluateBoard(current_state), current_state
+            return self.evaluateBoard(current_state)
         
         max_val = float('-inf')
         min_val = float('inf')
-        next_move = None
+        # next_move = None
         if is_max: 
             for move in possible_moves: 
-                value, path = self.minimax(self, move, depth - 1, False)
+                value = self.minimax(move, depth - 1, False, alpha, beta)
                 alpha = max(alpha, value)
                 if value > max_val: 
                     max_val = value
-                    next_move = move
+                    # next_move = move
                 if value >= beta:
                     break
-            return max_val, next_move
+            return max_val
         else: 
             for move in possible_moves: 
-                value, path = self.minimax(self, move, depth - 1, True)
+                value = self.minimax(move, depth - 1, False, alpha, beta)
                 beta = min(beta, value)
                 if value < min_val: 
                     min_val = value
-                    next_move = move
+                    # next_move = move
                 if value <= alpha:
                     break
-            return min_val, next_move
+            return min_val
         
         
     # gets the next best move from current board configuration
@@ -78,7 +78,7 @@ class CheckerAI:
         bestMoveVal = math.inf
 
         for move in nextMoves:
-            moveEvaluation = -self.deepEval(move, accuracyLevel)
+            moveEvaluation = -self.minimax(move, accuracyLevel, False, float('-inf'), float('inf'))
             if (moveEvaluation < bestMoveVal):
                 bestNextMove = move
                 bestMoveVal = moveEvaluation
@@ -88,19 +88,19 @@ class CheckerAI:
         return bestNextMove
 
 
-    def deepEval(self, currentState:CheckerBoard, depth:int) -> int:
-        possibleNextStates = self.boardTransition.getAllBoards(currentState)
+    # def deepEval(self, currentState:CheckerBoard, depth:int) -> int:
+    #     possibleNextStates = self.boardTransition.getAllBoards(currentState)
 
-        if (depth == 0 or len(possibleNextStates) == 0):
-            return self.evaluateBoard(currentState)
+    #     if (depth == 0 or len(possibleNextStates) == 0):
+    #         return self.evaluateBoard(currentState)
         
-        maxVal = -math.inf
-        for state in possibleNextStates:
-            val = -self.deepEval(state, depth - 1)
-            if (val > maxVal):
-                maxVal = val
+    #     maxVal = -math.inf
+    #     for state in possibleNextStates:
+    #         val = -self.deepEval(state, depth - 1)
+    #         if (val > maxVal):
+    #             maxVal = val
         
-        return maxVal
+    #     return maxVal
     
     def get_path(self) -> list["CheckerBoard"]:
         path = []
