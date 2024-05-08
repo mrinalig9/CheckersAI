@@ -75,11 +75,11 @@ class CheckerAI:
             print("No move exists")
             return None
         bestNextMove = None
-        bestMoveVal = -math.inf
+        bestMoveVal = math.inf
 
         for move in nextMoves:
-            moveEvaluation = self.deepEval(move, accuracyLevel)
-            if (moveEvaluation > bestMoveVal):
+            moveEvaluation = -self.deepEval(move, accuracyLevel)
+            if (moveEvaluation < bestMoveVal):
                 bestNextMove = move
                 bestMoveVal = moveEvaluation
 
@@ -96,7 +96,7 @@ class CheckerAI:
         
         maxVal = -math.inf
         for state in possibleNextStates:
-            val = self.deepEval(state, depth - 1)
+            val = -self.deepEval(state, depth - 1)
             if (val > maxVal):
                 maxVal = val
         
