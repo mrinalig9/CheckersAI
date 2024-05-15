@@ -36,6 +36,8 @@ class Piece:
         return str(self.pieceNum)
 
     def __eq__(self, other) -> bool:
+        if type(other) is not Piece:
+            return False
         return self.pieceNum == other.pieceNum and self.row == other.row and self.col == other.col
 
 
