@@ -7,7 +7,6 @@ from constants import Q_TABLE_FILE
 
 class CheckerAI:
     _KING_VALUE = 3
-
     def __init__(self) -> None:
         self.boardTransition = BoardTransition()
         try:
@@ -37,15 +36,20 @@ class CheckerAI:
     # uses a get_children() function that should be made in transition
     def minimax(self, current_state, depth, is_max, alpha : float, beta : float): 
         # no move will be made
-        possible_moves = self.boardTransition.getAllBoards(current_state)
-        if depth == 0 or len(possible_moves) == 0:
+        if depth == 0:
             return self.evaluateBoard(current_state)
         
-        max_val = float('-inf')
-        min_val = float('inf')
+        possible_moves = self.boardTransition.getAllBoards(current_state)
+        
+        if len(possible_moves) == 0:
+            return self.evaluateBoard(current_state)
+        
         # next_move = None
         if is_max: 
+            max_val = float('-inf')
             for move in possible_moves: 
+                # print("BOARD DEPTH " + str(depth))
+                # print(move)
                 value = self.minimax(move, depth - 1, False, alpha, beta)
                 alpha = max(alpha, value)
                 if value > max_val: 
@@ -55,8 +59,11 @@ class CheckerAI:
                     break
             return max_val
         else: 
+            min_val = float('inf')
             for move in possible_moves: 
-                value = self.minimax(move, depth - 1, False, alpha, beta)
+                # print("BOARD DEPTH " + str(depth))
+                # print(move)
+                value = self.minimax(move, depth - 1, True, alpha, beta)
                 beta = min(beta, value)
                 if value < min_val: 
                     min_val = value
@@ -69,16 +76,25 @@ class CheckerAI:
     # gets the next best move from current board configuration
     # the higher the accuracy level the better the move but it costs more performance
     def nextBestMove(self, currentBoard:CheckerBoard, accuracyLevel:int = 3):
+        self.evaluated_boards = [(currentBoard, self.evaluateBoard(currentBoard))]
         nextMoves = self.boardTransition.getAllBoards(currentBoard)
-
         if (len(nextMoves) == 0):
             print("No move exists")
             return None
         bestNextMove = None
         bestMoveVal = -math.inf
 
+        alpha = float('-inf')
+        beta = float('inf')
+        # print("CURRENT:")
+        # print(currentBoard)
+        # print("MOVES:")
+        # for move in nextMoves:
+        #     print(move)
+        # print("POSSIBLE:")
         for move in nextMoves:
-            moveEvaluation = self.minimax(move, accuracyLevel, True, float('-inf'), float('inf'))
+            moveEvaluation = self.minimax(move, accuracyLevel, False, alpha, beta)
+            alpha = max(alpha, moveEvaluation)
             if (moveEvaluation > bestMoveVal):
                 bestNextMove = move
                 bestMoveVal = moveEvaluation
