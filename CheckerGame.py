@@ -236,7 +236,6 @@ class CheckerBoard:
                             # recursive calls for multi captures
                             multiCapture = newBoard.getBoardAfterCaptureMoves(newPiece)
                             if (len(multiCapture) == 0):
-                                newBoard.changeTurn()
                                 possibleBoards.append(newBoard)
                             else:
                                 possibleBoards.extend(multiCapture)

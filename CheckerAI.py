@@ -7,6 +7,7 @@ from constants import Q_TABLE_FILE
 
 class CheckerAI:
     _KING_VALUE = 3
+    _TERMINAL_NODE_EVAL = 100
     def __init__(self) -> None:
         self.boardTransition = BoardTransition()
         try:
@@ -42,7 +43,8 @@ class CheckerAI:
         possible_moves = self.boardTransition.getAllBoards(current_state)
         
         if len(possible_moves) == 0:
-            return self.evaluateBoard(current_state)
+            # Terminal Node
+            return self._TERMINAL_NODE_EVAL * -current_state.turn
         
         # next_move = None
         if is_max: 
@@ -98,6 +100,18 @@ class CheckerAI:
             if (moveEvaluation > bestMoveVal):
                 bestNextMove = move
                 bestMoveVal = moveEvaluation
+
+        if bestMoveVal >= self._TERMINAL_NODE_EVAL:
+            # if future move all lead to terminal loss
+            bestMoveVal = -math.inf
+            for move in nextMoves:
+                moveEvaluation = self.minimax(move, 1, False, alpha, beta)
+                alpha = max(alpha, moveEvaluation)
+                if (moveEvaluation > bestMoveVal):
+                    bestNextMove = move
+                    bestMoveVal = moveEvaluation
+            
+            # Then only play best relative move
 
         print("Move Confidence:", bestMoveVal)
         

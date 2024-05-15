@@ -15,7 +15,7 @@ if __name__ == "__main__":
     bt = BoardTransition()
     CB = CheckerBoard()
     CB.initializeBoard()
-    # print(CB)
+    print(CB)
 
     nextBoardStates = bt.getAllBoards(CB)
 
