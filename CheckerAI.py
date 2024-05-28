@@ -1,12 +1,21 @@
 from Transition import BoardTransition
-from CheckerGame import CheckerBoard
+from CheckerGame import CheckerBoard, Piece
 import numpy as np
 import math
-from constants import Q_TABLE_FILE
+from constants import Q_TABLE_FILE, _P1PIECE, _P2PIECE, _P1KING, _P2KING, _ROWS, _COLS
 #import tensorflow as tf
 
 class CheckerAI:
-    _KING_VALUE = 3
+
+    #Weights of Heuristic Factors
+    _KING_VALUE = 4
+    _PIECE_VALUE = 2
+    _ADJ_VALUE = 0.2
+    _EDGE_VALUE = 0.5
+    _PROMO_VALUE = 0.8
+    _OPPONENT_MULT = -1.2
+    _DISTANCE_MULT = 2
+
     _TERMINAL_NODE_EVAL = 100
     def __init__(self) -> None:
         self.boardTransition = BoardTransition()
@@ -22,12 +31,50 @@ class CheckerAI:
     # Higher evaluation for kings
     def evaluateBoard(self, board:CheckerBoard) -> int:
         # AI Teams works on this
-        # pass
-        # if board.turn == 1: 
-        return board.player1NumPieces - board.player2NumPieces + ((board.player1NumKings - board.player2NumKings) * self._KING_VALUE)
-        # else: 
-        #     return board.player2NumPieces - board.player1NumPieces + ((board.player2NumKings - board.player1NumKings) * self._KING_VALUE)
-   
+
+        if (board.player1NumPieces + board.player1NumKings) == 0:
+            return -1 * self._TERMINAL_NODE_EVAL
+        elif (board.player2NumPieces + board.player2NumKings) == 0:
+            return self._TERMINAL_NODE_EVAL
+        
+        boardValue = 0.0
+        P1DistanceFromPromo = 0
+        P2DistanceFromPromo = 0
+        for row in board.board:
+            for piece in row:
+                if type(piece) is Piece:
+                    pieceValue = self._PIECE_VALUE
+                    adjSpaces = [(piece.row + 1, piece.col + 1), (piece.row + 1, piece.col - 1), (piece.row - 1, piece.col + 1), (piece.row - 1, piece.col - 1)]
+                    # Is the piece defending or being defended by another piece
+                    for row, col in adjSpaces:
+                        if 0 <= row < _ROWS and 0 <= col < _COLS:
+                            if (type(board.board[row][col]) is Piece and (board.board[row][col].player == piece.player)):
+                                pieceValue += self._ADJ_VALUE
+                    # Is the piece on the edge
+                    if piece.col == 0 or piece.col == _COLS:
+                        pieceValue += self._EDGE_VALUE
+                    # Is the piece defending the promotion line
+                    if (piece.row == 0 and piece.pieceNum == _P1PIECE) or (piece.row == _ROWS and piece.pieceNum == _P2PIECE):
+                        pieceValue += self._PROMO_VALUE
+                    # Is the piece a King
+                    if piece.king:
+                        pieceValue += self._KING_VALUE
+                    # Does the piece not belong to the AI
+                    if piece.player == 2:
+                        pieceValue *= self._OPPONENT_MULT
+                        if not piece.king:
+                            P2DistanceFromPromo += (float(_ROWS - piece.row) / _ROWS)
+                    else:
+                        if not piece.king:
+                            P1DistanceFromPromo += (float(piece.row) / _ROWS)
+                    boardValue += pieceValue
+        # Add the average distance of the pieces from their promotion line
+        if board.player1NumPieces > 0 and board.player2NumPieces > 0:
+            boardValue += self._DISTANCE_MULT * ((P1DistanceFromPromo / board.player1NumPieces) - (P2DistanceFromPromo / board.player2NumPieces))
+
+        return boardValue
+        # return board.player1NumPieces - board.player2NumPieces + ((board.player1NumKings - board.player2NumKings) * self._KING_VALUE)
+        
     
     # current_state (board) - current state of the game board
     # depth (int) - how deep in the minimax tree to go
@@ -44,7 +91,7 @@ class CheckerAI:
         
         if len(possible_moves) == 0:
             # Terminal Node
-            return self._TERMINAL_NODE_EVAL * -current_state.turn
+            return self._TERMINAL_NODE_EVAL * current_state.turn
         
         # next_move = None
         if is_max: 
@@ -101,7 +148,7 @@ class CheckerAI:
                 bestNextMove = move
                 bestMoveVal = moveEvaluation
 
-        if bestMoveVal >= self._TERMINAL_NODE_EVAL:
+        if bestMoveVal <= (-1 * self._TERMINAL_NODE_EVAL):
             # if future move all lead to terminal loss
             bestMoveVal = -math.inf
             for move in nextMoves:

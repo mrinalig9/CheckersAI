@@ -17,6 +17,12 @@ class Piece:
         self.row = row
         self.col = col
         self.pieceNum = pieceNum
+        if self.pieceNum > 0:
+            self.player = 2
+        elif self.pieceNum < 0:
+            self.player = 1
+        else:
+            self.player = 0
 
         # calculates x and y position from row and column
         self.calculatePosition()
