@@ -5,6 +5,9 @@ from CheckerAI import CheckerAI
 from Transition import BoardTransition
 from constants import HEIGHT, WIDTH, _P1PIECE, _P2PIECE, _FORCED_CAPTURE
 
+pygame.font.init()
+font = pygame.font.SysFont('Arial', 24)
+
 if __name__ == "__main__":
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     gameActive = True
@@ -69,6 +72,16 @@ if __name__ == "__main__":
         # Monitoring Performance
         # clock.tick()
         # print(clock.get_fps())
+
+        #print out the debug values
+        eval_score = ai.evaluateBoard(CB)
+        debug_line = [
+            f"eval: {eval_score}",
+        ]
+        
+        CB.debug_line(debug_line)
+
+        CB.debug(window)
 
         CB.drawPieces(window)
 
