@@ -4,6 +4,7 @@ from CheckerAI import CheckerAI
 from Transition import BoardTransition
 from constants import HEIGHT, WIDTH, _P1PIECE, _P2PIECE, _FORCED_CAPTURE, Q_TABLE_FILE
 
+
 if __name__ == "__main__":
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     gameActive = True
@@ -69,6 +70,14 @@ if __name__ == "__main__":
         # Monitoring Performance
         # clock.tick()
         # print(clock.get_fps())
+
+        #print out the debug values
+        eval_score = ai.evaluateBoard(CB)
+        
+        debug_message = 'Evaluation'
+
+        CB.debug(window, eval_score, debug_message)
+
 
         CB.drawPieces(window)
 
