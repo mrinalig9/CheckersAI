@@ -313,8 +313,6 @@ class CheckerBoard:
         return 0
     
     #create the lines
-    def debug_line(self, lines):
-        self.debug_lines = lines
 
     def debug(self, window, value, debug_message):
         pygame.draw.rect(window, (255, 255, 255), (0, _ROWS * _SQUARE_SIZE, _COLS * _SQUARE_SIZE, DEBUG_HEIGHT))
