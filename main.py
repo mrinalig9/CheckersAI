@@ -77,7 +77,6 @@ if __name__ == "__main__":
             f"eval: {eval_score}",
         ]
         
-        CB.debug_line(debug_line)
 
         CB.debug(window)
 
