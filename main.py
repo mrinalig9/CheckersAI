@@ -78,7 +78,7 @@ if __name__ == "__main__":
         ]
         
 
-        CB.debug(window)
+        CB.debug(window, eval_score, debug_message)
 
         CB.drawPieces(window)
 
