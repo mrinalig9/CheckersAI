@@ -70,7 +70,6 @@ class CheckerBoard:
 
         self.parent = None
 
-        self.debug_lines = [] 
 
     # Sets up pieces for a new game
     def initializeBoard(self):
