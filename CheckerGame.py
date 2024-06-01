@@ -1,7 +1,11 @@
 import pygame
 from copy import deepcopy
-from constants import _P1PIECE, _P2PIECE, _P1KING, _P2KING, _BOARD_COLOR, _PIECE_COLOR, _SQUARE_SIZE
-from constants import _PIECE_RADIUS, _ROWS, _COLS,_PIECE_PADDING, _FORCED_CAPTURE
+from constants import _P1PIECE, _P2PIECE, _P1KING, _P2KING, _BOARD_COLOR, _PIECE_COLOR, _SQUARE_SIZE, WIDTH
+from constants import _PIECE_RADIUS, _ROWS, _COLS,_PIECE_PADDING, _FORCED_CAPTURE, DEBUG_HEIGHT
+
+pygame.font.init()
+font = pygame.font.SysFont('Arial', 24)
+
 
 # Each piece in the checkers board
 class Piece:    
@@ -65,6 +69,7 @@ class CheckerBoard:
         self.player1NumKings = self.player2NumKings = 0
 
         self.parent = None
+
 
     # Sets up pieces for a new game
     def initializeBoard(self):
@@ -305,7 +310,15 @@ class CheckerBoard:
                 return _P2PIECE
         
         return 0
+    
+    #create the lines
 
+    def debug(self, window, value, debug_message):
+
+        debug_line = f"{debug_message}: {value}"
+        pygame.draw.rect(window, (255, 255, 255), (0, _ROWS * _SQUARE_SIZE, _COLS * _SQUARE_SIZE, DEBUG_HEIGHT))
+        text_surface = font.render(debug_line, True, (0, 0, 0))
+        window.blit(text_surface, (10, 900))
 
     # for printing out the board on the console
     def __str__(self):
