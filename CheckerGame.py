@@ -314,14 +314,11 @@ class CheckerBoard:
     #create the lines
 
     def debug(self, window, value, debug_message):
-        pygame.draw.rect(window, (255, 255, 255), (0, _ROWS * _SQUARE_SIZE, _COLS * _SQUARE_SIZE, DEBUG_HEIGHT))
 
-        #put the text in the debug console
-        y = 900
-        for line in self.debug_lines:
-            debug_text = font.render(line, True, (0, 0, 0))
-            window.blit(debug_text, (WIDTH-600, y))
-            y = y+ 50 # Move to the next line
+        debug_line = f"{debug_message}: {value}"
+        pygame.draw.rect(window, (255, 255, 255), (0, _ROWS * _SQUARE_SIZE, _COLS * _SQUARE_SIZE, DEBUG_HEIGHT))
+        text_surface = font.render(debug_line, True, (0, 0, 0))
+        window.blit(text_surface, (10, 900))
 
     # for printing out the board on the console
     def __str__(self):
