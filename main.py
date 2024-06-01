@@ -73,12 +73,11 @@ if __name__ == "__main__":
 
         #print out the debug values
         eval_score = ai.evaluateBoard(CB)
-        debug_line = [
-            f"eval: {eval_score}",
-        ]
         
+        debug_message = 'Evaluation'
 
         CB.debug(window, eval_score, debug_message)
+
 
         CB.drawPieces(window)
 
