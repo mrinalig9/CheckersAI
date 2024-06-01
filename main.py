@@ -1,9 +1,8 @@
 import pygame
-from threading import Thread
 from CheckerGame import CheckerBoard, Piece
 from CheckerAI import CheckerAI
 from Transition import BoardTransition
-from constants import HEIGHT, WIDTH, _P1PIECE, _P2PIECE, _FORCED_CAPTURE
+from constants import HEIGHT, WIDTH, _P1PIECE, _P2PIECE, _FORCED_CAPTURE, Q_TABLE_FILE
 
 if __name__ == "__main__":
     window = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -11,7 +10,7 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
     player = _P2PIECE
 
-    ai = CheckerAI()
+    ai = CheckerAI(Q_TABLE_FILE)
     bt = BoardTransition()
     CB = CheckerBoard()
     CB.initializeBoard()
@@ -24,6 +23,7 @@ if __name__ == "__main__":
 
     while gameActive:
         CB.drawBoard(window)
+        clock.tick(60)
         time = pygame.time.get_ticks()
 
         # if its players turn

@@ -64,7 +64,7 @@ class CheckerBoard:
         self.player1NumPieces = self.player2NumPieces = 12
         self.player1NumKings = self.player2NumKings = 0
 
-        self.parent = None
+        # self.parent = None
 
     # Sets up pieces for a new game
     def initializeBoard(self):
@@ -318,7 +318,7 @@ class CheckerBoard:
         return self.board == other.board
     
     def __lt__(self, other):
-        other.parent = self
+        # other.parent = self
         self.board, other.board = other.board, self.board
         self.player1NumPieces, other.player1NumPieces = other.player1NumPieces, self.player1NumPieces
         self.player2NumPieces, other.player2NumPieces = other.player2NumPieces, self.player2NumPieces

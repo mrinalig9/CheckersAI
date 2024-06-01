@@ -2,6 +2,7 @@ from Transition import BoardTransition
 from CheckerGame import CheckerBoard, Piece
 import numpy as np
 import math
+from copy import deepcopy
 from constants import Q_TABLE_FILE, _P1PIECE, _P2PIECE, _P1KING, _P2KING, _ROWS, _COLS
 #import tensorflow as tf
 
@@ -16,25 +17,39 @@ class CheckerAI:
     _OPPONENT_MULT = -1.2
     _DISTANCE_MULT = 2
 
-    _TERMINAL_NODE_EVAL = 100
-    def __init__(self) -> None:
+    _LEARNING_RATE = 1
+    _GAMMA = 0.95
+    _EPSILON = 0.9
+
+    _TERMINAL_NODE_EVAL = 1000
+
+    def __init__(self, qTableName) -> None:
         self.boardTransition = BoardTransition()
+        self.qTableName = qTableName
+        self.visited = list[CheckerBoard]
         try:
-            self.qTable = np.load(Q_TABLE_FILE, allow_pickle="TRUE").item()
+            print("Loading Trainning Data...")
+            self.qTable = np.load(qTableName, allow_pickle="TRUE").item()
+            print("Successfully Loaded Trainning Data")
         except:
             print("No Q Table exists")
             self.qTable = dict()
-            np.save(Q_TABLE_FILE, self.qTable)
+            np.save(qTableName, self.qTable)
 
     # Utility function
     # Takes a board state evaluates it
     # Higher evaluation for kings
     def evaluateBoard(self, board:CheckerBoard) -> int:
         # AI Teams works on this
+        if (self.qTable.get(board) is not None):
+            # print("Using QTable val: ", self.qTable[board])
+            return self.qTable.get(board)
 
         if (board.player1NumPieces + board.player1NumKings) == 0:
+            self.qTable[board] = -1 * self._TERMINAL_NODE_EVAL
             return -1 * self._TERMINAL_NODE_EVAL
         elif (board.player2NumPieces + board.player2NumKings) == 0:
+            self.qTable[board] = self._TERMINAL_NODE_EVAL
             return self._TERMINAL_NODE_EVAL
         
         boardValue = 0.0
@@ -72,6 +87,7 @@ class CheckerAI:
         if board.player1NumPieces > 0 and board.player2NumPieces > 0:
             boardValue += self._DISTANCE_MULT * ((P1DistanceFromPromo / board.player1NumPieces) - (P2DistanceFromPromo / board.player2NumPieces))
 
+        self.qTable[board] = boardValue
         return boardValue
         # return board.player1NumPieces - board.player2NumPieces + ((board.player1NumKings - board.player2NumKings) * self._KING_VALUE)
         
@@ -124,7 +140,7 @@ class CheckerAI:
         
     # gets the next best move from current board configuration
     # the higher the accuracy level the better the move but it costs more performance
-    def nextBestMove(self, currentBoard:CheckerBoard, accuracyLevel:int = 3):
+    def nextBestMove(self, currentBoard:CheckerBoard, accuracyLevel:int = 4, isMax:bool = False):
         self.evaluated_boards = [(currentBoard, self.evaluateBoard(currentBoard))]
         nextMoves = self.boardTransition.getAllBoards(currentBoard)
         if (len(nextMoves) == 0):
@@ -142,7 +158,7 @@ class CheckerAI:
         #     print(move)
         # print("POSSIBLE:")
         for move in nextMoves:
-            moveEvaluation = self.minimax(move, accuracyLevel, False, alpha, beta)
+            moveEvaluation = self.minimax(move, accuracyLevel, isMax, alpha, beta)
             alpha = max(alpha, moveEvaluation)
             if (moveEvaluation > bestMoveVal):
                 bestNextMove = move
@@ -152,7 +168,7 @@ class CheckerAI:
             # if future move all lead to terminal loss
             bestMoveVal = -math.inf
             for move in nextMoves:
-                moveEvaluation = self.minimax(move, 1, False, alpha, beta)
+                moveEvaluation = self.minimax(move, 2, isMax, alpha, beta)
                 alpha = max(alpha, moveEvaluation)
                 if (moveEvaluation > bestMoveVal):
                     bestNextMove = move
@@ -187,6 +203,20 @@ class CheckerAI:
             current_node = current_node.parent
         return path[::-1]
     
+    def linkVisitedBoard(self, board:CheckerBoard):
+        newVisited = deepcopy(board)
+        self.visited.append(newVisited)
+    
+    def applyQReward(self, wonPlayer:int):
+        maxTurns = len(self.visited)
+        for i, board in enumerate(self.visited):
+            print("Player ", wonPlayer, " won | Previous board val: ", self.qTable[board])
+            self.qTable[board] += (board.turn * wonPlayer) * self._LEARNING_RATE * pow(self._GAMMA, maxTurns - i)
+            print("On turn ", i, " | New board val: ", self.qTable[board], "For Player: ", board.turn, "\n")
+
+        self.visited.clear()
+
+    
     # Saves q table inside binary file
     def __del__(self):
-        np.save(Q_TABLE_FILE, self.qTable)
+        np.save(self.qTableName, self.qTable)
