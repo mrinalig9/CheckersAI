@@ -26,7 +26,7 @@ class CheckerAI:
     def __init__(self, qTableName) -> None:
         self.boardTransition = BoardTransition()
         self.qTableName = qTableName
-        self.visited = list[CheckerBoard]
+        self.visited = [CheckerBoard]
         try:
             print("Loading Trainning Data...")
             self.qTable = np.load(qTableName, allow_pickle="TRUE").item()
@@ -140,14 +140,14 @@ class CheckerAI:
         
     # gets the next best move from current board configuration
     # the higher the accuracy level the better the move but it costs more performance
-    def nextBestMove(self, currentBoard:CheckerBoard, accuracyLevel:int = 4, isMax:bool = False):
+    def nextBestMove(self, currentBoard:CheckerBoard, accuracyLevel:int = 4) -> CheckerBoard:
         self.evaluated_boards = [(currentBoard, self.evaluateBoard(currentBoard))]
         nextMoves = self.boardTransition.getAllBoards(currentBoard)
         if (len(nextMoves) == 0):
             print("No move exists")
             return None
         bestNextMove = None
-        bestMoveVal = -math.inf
+        bestMoveVal = currentBoard.turn * math.inf
 
         alpha = float('-inf')
         beta = float('inf')
@@ -158,19 +158,19 @@ class CheckerAI:
         #     print(move)
         # print("POSSIBLE:")
         for move in nextMoves:
-            moveEvaluation = self.minimax(move, accuracyLevel, isMax, alpha, beta)
+            moveEvaluation = self.minimax(move, accuracyLevel, currentBoard.turn == _P2PIECE, alpha, beta)
             alpha = max(alpha, moveEvaluation)
-            if (moveEvaluation > bestMoveVal):
+            if (moveEvaluation * currentBoard.turn < currentBoard.turn * bestMoveVal):
                 bestNextMove = move
                 bestMoveVal = moveEvaluation
 
-        if bestMoveVal <= (-1 * self._TERMINAL_NODE_EVAL):
+        if bestMoveVal <= (currentBoard.turn * self._TERMINAL_NODE_EVAL):
             # if future move all lead to terminal loss
-            bestMoveVal = -math.inf
+            bestMoveVal = currentBoard.turn * math.inf
             for move in nextMoves:
-                moveEvaluation = self.minimax(move, 2, isMax, alpha, beta)
+                moveEvaluation = self.minimax(move, 2, currentBoard.turn == _P2PIECE, alpha, beta)
                 alpha = max(alpha, moveEvaluation)
-                if (moveEvaluation > bestMoveVal):
+                if (moveEvaluation * currentBoard.turn < currentBoard.turn * bestMoveVal):
                     bestNextMove = move
                     bestMoveVal = moveEvaluation
             
@@ -209,10 +209,21 @@ class CheckerAI:
     
     def applyQReward(self, wonPlayer:int):
         maxTurns = len(self.visited)
-        for i, board in enumerate(self.visited):
-            print("Player ", wonPlayer, " won | Previous board val: ", self.qTable[board])
-            self.qTable[board] += (board.turn * wonPlayer) * self._LEARNING_RATE * pow(self._GAMMA, maxTurns - i)
-            print("On turn ", i, " | New board val: ", self.qTable[board], "For Player: ", board.turn, "\n")
+        # Our model should try to avoid draws and repeating moves
+        if (wonPlayer == 0):
+            # So if the game results in a draw don't take moves that end up in a draw
+            for i, board in enumerate(self.visited):
+                if (self.qTable.get(board) is not None):
+                    print("Player ", wonPlayer, " won | Previous board val: ", self.qTable[board])
+                    self.qTable[board] += board.turn * self._LEARNING_RATE * pow(self._GAMMA, maxTurns - i)
+                    print("On turn ", i, " | New board val: ", self.qTable[board], "For Player: ", board.turn, "\n")
+        else:
+            # Otherwise apply q reward normally
+            for i, board in enumerate(self.visited):
+                if (self.qTable.get(board) is not None):
+                    print("Player ", wonPlayer, " won | Previous board val: ", self.qTable[board])
+                    self.qTable[board] += -wonPlayer * self._LEARNING_RATE * pow(self._GAMMA, maxTurns - i)
+                    print("On turn ", i, " | New board val: ", self.qTable[board], "For Player: ", board.turn, "\n")
 
         self.visited.clear()
 
