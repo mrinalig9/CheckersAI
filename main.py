@@ -2,11 +2,11 @@ import pygame
 from CheckerGame import CheckerBoard, Piece
 from CheckerAI import CheckerAI
 from Transition import BoardTransition
-from constants import HEIGHT, WIDTH, _P1PIECE, _P2PIECE, _FORCED_CAPTURE, Q_TABLE_FILE
+from constants import HEIGHT, WIDTH, _P1PIECE, _P2PIECE, _FORCED_CAPTURE, Q_TABLE_FILE, DEBUG_HEIGHT
 
 
 if __name__ == "__main__":
-    window = pygame.display.set_mode((WIDTH, HEIGHT))
+    window = pygame.display.set_mode((WIDTH, HEIGHT + DEBUG_HEIGHT))
     gameActive = True
     clock = pygame.time.Clock()
     player = _P2PIECE
@@ -21,6 +21,7 @@ if __name__ == "__main__":
 
     # Treat as pointer to a piece
     selectedPiece:Piece = None
+    currentBoardEval = 0
 
     while gameActive:
         CB.drawBoard(window)
@@ -49,6 +50,9 @@ if __name__ == "__main__":
 
             if (selectedPiece is not None):
                 selectedPiece.drawOutline(window)
+
+            currentBoardEval = ai.evaluateBoard(CB)
+            
         # if its AI's turn
         else:
             depth = 4
@@ -57,8 +61,8 @@ if __name__ == "__main__":
             print("depth: ", depth)
             CB < nextBestMove
             CB.changeTurn()
-            print("eval: ", ai.evaluateBoard(CB))
-
+            currentBoardEval = ai.evaluateBoard(CB)
+            
             nextBoardStates = bt.getAllBoards(CB)
             wonPlayer = CB.gameEnd(len(nextBoardStates))
             if (wonPlayer == _P1PIECE):
@@ -70,16 +74,8 @@ if __name__ == "__main__":
         # Monitoring Performance
         # clock.tick()
         # print(clock.get_fps())
-
-        #print out the debug values
-        eval_score = ai.evaluateBoard(CB)
-        
-        debug_message = 'Evaluation'
-
-        CB.debug(window, eval_score, debug_message)
-
-
         CB.drawPieces(window)
+        CB.debug(window, currentBoardEval, "Current Board Evaluation")
 
         pygame.display.update()
 

@@ -1,6 +1,6 @@
 import pygame
 from copy import deepcopy
-from constants import _P1PIECE, _P2PIECE, _P1KING, _P2KING, _BOARD_COLOR, _PIECE_COLOR, _SQUARE_SIZE, WIDTH
+from constants import _P1PIECE, _P2PIECE, _P1KING, _P2KING, _BOARD_COLOR, _PIECE_COLOR, _SQUARE_SIZE, WIDTH, HEIGHT
 from constants import _PIECE_RADIUS, _ROWS, _COLS,_PIECE_PADDING, _FORCED_CAPTURE, DEBUG_HEIGHT
 
 pygame.font.init()
@@ -132,7 +132,10 @@ class CheckerBoard:
         # calculate board square location clicked on
         pieceRow = mousePosY // _SQUARE_SIZE
         pieceCol = mousePosX // _SQUARE_SIZE
-        #print(f"Row: ${pieceRow} Col: ${pieceCol}")
+        # print(f"Row: ${pieceRow} Col: ${pieceCol}")
+
+        if (pieceRow < 0 or pieceRow >= _ROWS or pieceCol < 0 or pieceCol >= _COLS):
+            return None
         
         selectedSquare = self.board[pieceRow][pieceCol]
         if (type(selectedSquare) is Piece and (selectedSquare.pieceNum * self.turn) > 0):
@@ -311,14 +314,12 @@ class CheckerBoard:
         
         return 0
     
-    #create the lines
-
     def debug(self, window, value, debug_message):
 
         debug_line = f"{debug_message}: {value}"
         pygame.draw.rect(window, (255, 255, 255), (0, _ROWS * _SQUARE_SIZE, _COLS * _SQUARE_SIZE, DEBUG_HEIGHT))
         text_surface = font.render(debug_line, True, (0, 0, 0))
-        window.blit(text_surface, (10, 900))
+        window.blit(text_surface, (10, HEIGHT + (DEBUG_HEIGHT / 2)))
 
     # for printing out the board on the console
     def __str__(self):
