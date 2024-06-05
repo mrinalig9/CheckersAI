@@ -2,6 +2,7 @@ from Transition import BoardTransition
 from CheckerGame import CheckerBoard, Piece
 import numpy as np
 import math
+import random
 from copy import deepcopy
 from constants import Q_TABLE_FILE, _P1PIECE, _P2PIECE, _P1KING, _P2KING, _ROWS, _COLS
 #import tensorflow as tf
@@ -9,7 +10,7 @@ from constants import Q_TABLE_FILE, _P1PIECE, _P2PIECE, _P1KING, _P2KING, _ROWS,
 class CheckerAI:
 
     #Weights of Heuristic Factors
-    _KING_VALUE = 4
+    _KING_VALUE = 3
     _PIECE_VALUE = 2
     _ADJ_VALUE = 0.2
     _EDGE_VALUE = 0.5
@@ -137,6 +138,13 @@ class CheckerAI:
                     break
             return min_val
         
+    # Decides if it should take the best move or explore
+    def exploration(self, bestMove:CheckerBoard, secondBestMove:CheckerBoard) -> CheckerBoard:
+        prob = random.random()
+        if (secondBestMove is not None and prob > self._EPSILON):
+            print("Exploring a new move")
+            return secondBestMove
+        return bestMove
         
     # gets the next best move from current board configuration
     # the higher the accuracy level the better the move but it costs more performance
@@ -147,6 +155,7 @@ class CheckerAI:
             print("No move exists")
             return None
         bestNextMove = None
+        secondBestMove = None
         bestMoveVal = currentBoard.turn * math.inf
 
         alpha = float('-inf')
@@ -161,6 +170,7 @@ class CheckerAI:
             moveEvaluation = self.minimax(move, accuracyLevel, currentBoard.turn == _P2PIECE, alpha, beta)
             alpha = max(alpha, moveEvaluation)
             if (moveEvaluation * currentBoard.turn < currentBoard.turn * bestMoveVal):
+                secondBestMove = bestNextMove
                 bestNextMove = move
                 bestMoveVal = moveEvaluation
 
@@ -171,14 +181,15 @@ class CheckerAI:
                 moveEvaluation = self.minimax(move, 2, currentBoard.turn == _P2PIECE, alpha, beta)
                 alpha = max(alpha, moveEvaluation)
                 if (moveEvaluation * currentBoard.turn < currentBoard.turn * bestMoveVal):
+                    secondBestMove = bestNextMove
                     bestNextMove = move
                     bestMoveVal = moveEvaluation
             
             # Then only play best relative move
 
-        print("Move Confidence:", bestMoveVal)
+        # print("Move Confidence:", bestMoveVal)
         
-        return bestNextMove
+        return self.exploration(bestNextMove, secondBestMove)
 
 
     # def deepEval(self, currentState:CheckerBoard, depth:int) -> int:
@@ -195,17 +206,24 @@ class CheckerAI:
         
     #     return maxVal
     
-    def get_path(self) -> list["CheckerBoard"]:
-        path = []
-        current_node = self
-        while current_node:
-            path.append(current_node)
-            current_node = current_node.parent
-        return path[::-1]
+    # def get_path(self) -> list["CheckerBoard"]:
+    #     path = []
+    #     current_node = self
+    #     while current_node:
+    #         path.append(current_node)
+    #         current_node = current_node.parent
+    #     return path[::-1]
     
     def linkVisitedBoard(self, board:CheckerBoard):
         newVisited = deepcopy(board)
         self.visited.append(newVisited)
+
+    def playerNumber(self, player) ->str:
+        if (player == _P1PIECE):
+            return "1"
+        elif (player == _P2PIECE):
+            return "2"
+        return "0"
     
     def applyQReward(self, wonPlayer:int):
         maxTurns = len(self.visited)
@@ -214,16 +232,16 @@ class CheckerAI:
             # So if the game results in a draw don't take moves that end up in a draw
             for i, board in enumerate(self.visited):
                 if (self.qTable.get(board) is not None):
-                    print("Player ", wonPlayer, " won | Previous board val: ", self.qTable[board])
+                    print("Player ", self.playerNumber(wonPlayer), " won | Previous board val: ", self.qTable[board])
                     self.qTable[board] += board.turn * self._LEARNING_RATE * pow(self._GAMMA, maxTurns - i)
-                    print("On turn ", i, " | New board val: ", self.qTable[board], "For Player: ", board.turn, "\n")
+                    print("On turn ", i, " | New board val: ", self.qTable[board], "For Player: ", self.playerNumber(board.turn), "\n")
         else:
             # Otherwise apply q reward normally
             for i, board in enumerate(self.visited):
                 if (self.qTable.get(board) is not None):
-                    print("Player ", wonPlayer, " won | Previous board val: ", self.qTable[board])
+                    print("Player ", self.playerNumber(wonPlayer), " won | Previous board val: ", self.qTable[board])
                     self.qTable[board] += -wonPlayer * self._LEARNING_RATE * pow(self._GAMMA, maxTurns - i)
-                    print("On turn ", i, " | New board val: ", self.qTable[board], "For Player: ", board.turn, "\n")
+                    print("On turn ", i, " | New board val: ", self.qTable[board], "For Player: ", self.playerNumber(board.turn), "\n")
 
         self.visited.clear()
 

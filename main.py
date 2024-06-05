@@ -22,6 +22,7 @@ if __name__ == "__main__":
     # Treat as pointer to a piece
     selectedPiece:Piece = None
     currentBoardEval = 0
+    repeatedMoves = dict()
 
     while gameActive:
         CB.drawBoard(window)
@@ -58,18 +59,28 @@ if __name__ == "__main__":
             depth = 4
             # depth = int(180/(CB.player1NumPieces + CB.player2NumPieces + 36))
             nextBestMove = ai.nextBestMove(CB, depth)
-            print("depth: ", depth)
             CB < nextBestMove
-            CB.changeTurn()
             currentBoardEval = ai.evaluateBoard(CB)
+
+            # Game Draw logic
+            if (repeatedMoves.get(nextBestMove) is not None):
+                if (repeatedMoves[nextBestMove] >= 3):
+                    print("Boards repeated resulted in a draw!")
+                    gameActive = False
+                else:
+                    repeatedMoves[nextBestMove] += 1
+            else:
+                repeatedMoves[nextBestMove] = 1
             
             nextBoardStates = bt.getAllBoards(CB)
             wonPlayer = CB.gameEnd(len(nextBoardStates))
             if (wonPlayer == _P1PIECE):
                 print("player 1 won!")
+                ai.applyQReward(wonPlayer)
                 gameActive = False
             elif (wonPlayer == _P2PIECE):
                 print("player 2 won!")
+                ai.applyQReward(wonPlayer)
                 gameActive = False
         # Monitoring Performance
         # clock.tick()
