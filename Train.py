@@ -20,6 +20,8 @@ if __name__ == "__main__":
 
 	trainActive = True
 	currentEpoch = 0
+	totalRewardApplied = 0
+
 	while (currentEpoch < TRAIN_EPOCH and trainActive):
 		print("Epoch: ", currentEpoch)
 		pygame.time.set_timer(TurnEvent, TURN_TIME)
@@ -40,14 +42,14 @@ if __name__ == "__main__":
 					gameActive = False
 				elif (event.type == TurnEvent):
 					# depth = int(180/(CB.player1NumPieces + CB.player2NumPieces + 36))
-					nextBestMove = ai.nextBestMove(CB, 3)
+					nextBestMove = ai.nextBestMove(CB, 2)
 					ai.linkVisitedBoard(nextBestMove)
 
 					# Game Draw logic
 					if (repeatedMoves.get(nextBestMove) is not None):
 						if (repeatedMoves[nextBestMove] >= 3):
 							print("Boards repeated resulted in a draw!")
-							ai.applyQReward(0)
+							totalRewardApplied += ai.applyQReward(0)
 							gameActive = False
 						else:
 							repeatedMoves[nextBestMove] += 1
@@ -61,11 +63,11 @@ if __name__ == "__main__":
 					wonPlayer = CB.gameEnd(len(nextBoardStates))
 					if (wonPlayer == _P1PIECE):
 						print("player 1 won!")
-						ai.applyQReward(wonPlayer)
+						totalRewardApplied += ai.applyQReward(wonPlayer)
 						gameActive = False
 					elif (wonPlayer == _P2PIECE):
 						print("player 2 won!")
-						ai.applyQReward(wonPlayer)
+						totalRewardApplied += ai.applyQReward(wonPlayer)
 						gameActive = False
 
 					pygame.time.set_timer(TurnEvent, TURN_TIME)
@@ -82,5 +84,6 @@ if __name__ == "__main__":
 
 		currentEpoch += 1
 
+	print("Average Reward per Episode over", currentEpoch, " episodes is: ", totalRewardApplied / currentEpoch)
 	pygame.quit()
 

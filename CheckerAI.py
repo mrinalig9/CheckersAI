@@ -231,7 +231,9 @@ class CheckerAI:
             return "2"
         return "0"
     
-    def applyQReward(self, wonPlayer:int):
+    # Applies Reward to the model and returns the amount of reward applied
+    def applyQReward(self, wonPlayer:int) -> int:
+        totalReward = 0
         maxTurns = len(self.visited)
         # Our model should try to avoid draws and repeating moves
         if (wonPlayer == 0):
@@ -239,17 +241,23 @@ class CheckerAI:
             for i, board in enumerate(self.visited):
                 if (self.qTable.get(board) is not None):
                     print("Player ", self.playerNumber(wonPlayer), " won | Previous board val: ", self.qTable[board])
-                    self.qTable[board] += board.turn * self._LEARNING_RATE * pow(self._GAMMA, maxTurns - i)
+                    appliedReward = board.turn * self._LEARNING_RATE * pow(self._GAMMA, maxTurns - i)
+                    self.qTable[board] += appliedReward
+                    totalReward -= abs(appliedReward)
                     print("On turn ", i, " | New board val: ", self.qTable[board], "For Player: ", self.playerNumber(board.turn), "\n")
         else:
             # Otherwise apply q reward normally
             for i, board in enumerate(self.visited):
                 if (self.qTable.get(board) is not None):
                     print("Player ", self.playerNumber(wonPlayer), " won | Previous board val: ", self.qTable[board])
-                    self.qTable[board] += -wonPlayer * self._LEARNING_RATE * pow(self._GAMMA, maxTurns - i)
+                    appliedReward = -wonPlayer * self._LEARNING_RATE * pow(self._GAMMA, maxTurns - i)
+                    self.qTable[board] += appliedReward
+                    totalReward += abs(appliedReward)
                     print("On turn ", i, " | New board val: ", self.qTable[board], "For Player: ", self.playerNumber(board.turn), "\n")
 
         self.visited.clear()
+
+        return totalReward
 
     
     # Saves q table inside binary file
