@@ -26,16 +26,22 @@ class CheckerAI:
 
     def __init__(self, qTableName) -> None:
         self.boardTransition = BoardTransition()
+        self.saveToDisk = True
         self.qTableName = qTableName
+
+        if (qTableName == ""):
+            self.qTableName = Q_TABLE_FILE
+            self.saveToDisk = False
+
         self.visited = [CheckerBoard]
         try:
             print("Loading Trainning Data...")
-            self.qTable = np.load(qTableName, allow_pickle="TRUE").item()
+            self.qTable = np.load(self.qTableName, allow_pickle="TRUE").item()
             print("Successfully Loaded Trainning Data")
         except:
             print("No Q Table exists")
             self.qTable = dict()
-            np.save(qTableName, self.qTable)
+            np.save(self.qTableName, self.qTable)
 
     # Utility function
     # Takes a board state evaluates it
@@ -248,4 +254,5 @@ class CheckerAI:
     
     # Saves q table inside binary file
     def __del__(self):
-        np.save(self.qTableName, self.qTable)
+        if (self.saveToDisk):
+            np.save(self.qTableName, self.qTable)
